@@ -1,0 +1,9 @@
+entity_name,entity_type,identifier_type,identifier_value,restriction_type,issuing_authority,order_reference,reason,start_date,end_date,status,source,source_url
+Sharma Constructions (DEMO),company,GSTIN,27AABCS9999Z1Z5,DEBARRED,CPWD,CPWD/DEBAR/2024/017,Debarred by CPWD for 2 years (contract default),2024-04-01,2026-03-31,active,demo-mock,
+Forged Docs Traders (DEMO),company,GSTIN,07XXXXX0000X1Z9,BLACKLISTED,GeM,GEM/BL/2024/003,Blacklisted - submitted forged documents,2024-02-15,,active,demo-mock,
+Nova Suspended Supplies (DEMO),company,GSTIN,29AAECN1234F1Z5,SUSPENDED,GeM,GEM/SUSP/2024/GFR144,Suspended for non-compliance with GFR Rule 144(xi),2024-06-01,,active,demo-mock,
+Kaveri Debarred Works (DEMO),company,GSTIN,33AAACK5678Q1ZP,DEBARRED,Ministry of Railways,RLY/DEBAR/2025/004,Debarred for repeated delivery default,2025-01-10,2027-01-09,active,demo-mock,
+BlackMark Enterprises (DEMO),company,GSTIN,09AABCB4321R1Z2,BLACKLISTED,State PWD (UP),UPPWD/BL/2025/099,Blacklisted for substandard supply,2025-03-20,,active,demo-mock,
+Restricted Traders (DEMO),company,GSTIN,24AAOFR8765L1Z4,OTHER_RESTRICTION,GeM,GEM/RES/2025/012,Turnover/payment restriction flag,2025-05-05,,active,demo-mock,
+Extra Debarred Demo (DEMO),company,GSTIN,19AADCE1122K1Z8,DEBARRED,CPWD,CPWD/DEBAR/2025/055,Debarred for false turnover declaration,2025-07-01,2026-06-30,active,demo-mock,
+Invalid Row No Identifier (DEMO),company,GSTIN,,BLACKLISTED,GeM,GEM/BL/2025/000,Missing identifier - should be reported invalid,,,active,demo-mock,

@@ -1,32 +1,40 @@
-"""Blacklist / debarment lookup.
+"""Blacklist / debarment / suspension lookup (DB-backed).
 
-Replaces the old hardcoded Python `BLACKLIST` dict with a database lookup against
-the procurement_restrictions table. Behaviour for the verification pipeline is
-preserved: given a GSTIN, return the restriction reason string if an active
-record exists, else None.
+Queries the procurement_restrictions table by NORMALIZED identifier so that
+GSTIN/PAN lookups are reliable regardless of spacing/case. Only 'active'
+restrictions count.
+
+Two entry points:
+- check(identifier)      -> reason string or None   (Phase 1 compatible)
+- lookup(identifier)     -> full record dict or None (Phase 2, richer)
 
 Keeping this in one place means real government/public procurement debarment
-data can be imported into the table later without touching verification code.
+data imported into the table is picked up automatically by verification.
 """
 from database.connection import db
+from database.models import restriction_public
+from services import normalize as N
 
 
-def check(identifier: str):
-    """Return the restriction reason for an identifier (e.g. GSTIN), or None.
-
-    Only 'active' restrictions count. Matching is case-insensitive on the
-    identifier to be safe.
-    """
-    ident = (identifier or "").strip().upper()
+def lookup(identifier: str):
+    """Return the full active restriction record for an identifier, or None."""
+    ident = N.normalize_identifier(identifier)
     if not ident:
         return None
     conn = db()
     row = conn.execute(
         "SELECT * FROM procurement_restrictions "
-        "WHERE UPPER(entity_identifier)=? AND status='active' LIMIT 1",
+        "WHERE normalized_identifier=? AND status='active' "
+        "ORDER BY id DESC LIMIT 1",
         (ident,),
     ).fetchone()
     conn.close()
     if not row:
         return None
-    return row["reason"]
+    return restriction_public(row)
+
+
+def check(identifier: str):
+    """Phase 1 compatible: return the restriction reason string, or None."""
+    rec = lookup(identifier)
+    return rec["reason"] if rec else None

@@ -168,14 +168,30 @@ def verify_bidder(gstin: str = "", pan: str = "", udyam: str = "", company: str 
         checks.append({"portal": "Udyam / MSME", "status": "invalid", "detail": "Invalid Udyam format"})
         flags.append({"sev": "low", "issue": "Invalid Udyam format"})
 
-    # ---- Blacklist / debarment check (now DB-backed) ----
+    # ---- Blacklist / debarment / suspension check (DB-backed) ----
+    # Frontend reads portal/status/detail (kept identical). The full restriction
+    # record is attached as extra keys — unknown keys are ignored by the UI.
     max_score += 20
-    reason = blacklist_service.check(g)
-    if reason:
-        checks.append({"portal": "Blacklist / Debarment", "status": "invalid", "detail": reason})
+    rec = blacklist_service.lookup(g)
+    if rec:
+        check = {"portal": "Blacklist / Debarment", "status": "invalid", "detail": rec["reason"]}
+        check.update({
+            "restriction_found": True,
+            "restriction_type": rec["restriction_type"],
+            "entity_name": rec["entity_name"],
+            "issuing_authority": rec["issuing_authority"],
+            "order_reference": rec["order_reference"],
+            "start_date": rec["start_date"],
+            "end_date": rec["end_date"],
+            "source": rec["source"],
+            "source_url": rec["source_url"],
+            "verification_status": rec["verification_status"],
+        })
+        checks.append(check)
         flags.append({"sev": "high", "issue": "Bidder is blacklisted/debarred"})
     else:
-        checks.append({"portal": "Blacklist / Debarment", "status": "verified", "detail": "No debarment record found"})
+        checks.append({"portal": "Blacklist / Debarment", "status": "verified",
+                       "detail": "No debarment record found", "restriction_found": False})
         score += 20
 
     pct = round((score / max_score) * 100) if max_score else 0

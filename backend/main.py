@@ -26,6 +26,7 @@ from routers import (
     documents,
     verification,
     audit,
+    restrictions,
 )
 
 load_dotenv()
@@ -58,6 +59,7 @@ app.include_router(bidders.router)
 app.include_router(documents.router)
 app.include_router(verification.router)
 app.include_router(audit.router)
+app.include_router(restrictions.router)
 
 
 @app.get("/")
