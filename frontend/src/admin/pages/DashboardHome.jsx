@@ -5,29 +5,37 @@ import { getTenders, getBidders, getSubmissions } from "../../services/api";
 export default function DashboardHome({ go }) {
   const [d, setD] = useState({ tenders: [], bidders: [], subs: [] });
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
 
   useEffect(() => {
-    Promise.all([getTenders(), getBidders(), getSubmissions()]).then(([t, b, s]) => {
-      setD({
-        tenders: t.ok ? t.data : [],
-        bidders: b.ok ? b.data : [],
-        subs: s.ok ? s.data : [],
-      });
-      setLoading(false);
-    });
+    Promise.all([getTenders(), getBidders(), getSubmissions()])
+      .then(([t, b, s]) => {
+        setD({
+          tenders: (t && t.ok && Array.isArray(t.data)) ? t.data : [],
+          bidders: (b && b.ok && Array.isArray(b.data)) ? b.data : [],
+          subs: (s && s.ok && Array.isArray(s.data)) ? s.data : [],
+        });
+        setLoading(false);
+      })
+      .catch((e) => { setErr(String(e)); setLoading(false); });
   }, []);
 
   if (loading) return <Loader label="Loading dashboard…" />;
+  if (err) return <div style={{ padding: 40, color: "#C0402E" }}>Error: {err}</div>;
 
-  const active = d.tenders.filter((t) => (t.status || "").toLowerCase() === "active" || (t.status || "").toLowerCase() === "open").length;
-  const pending = d.subs.filter((s) => ["submitted", "pending"].includes((s.status || "").toLowerCase())).length;
-  const nonComp = d.subs.filter((s) => (s.status || "").toLowerCase().includes("non")).length;
+  const subs = Array.isArray(d.subs) ? d.subs : [];
+  const tenders = Array.isArray(d.tenders) ? d.tenders : [];
+  const bidders = Array.isArray(d.bidders) ? d.bidders : [];
+
+  const active = tenders.filter((t) => ["active", "open", "published"].includes((t.status || "").toLowerCase())).length;
+  const pending = subs.filter((s) => ["submitted", "pending"].includes((s.status || "").toLowerCase())).length;
+  const nonComp = subs.filter((s) => (s.status || "").toLowerCase().includes("non") || (s.status || "") === "Rejected").length;
 
   const cards = [
-    { cls: "a", value: d.tenders.length, label: "Total Tenders" },
+    { cls: "a", value: tenders.length, label: "Total Tenders" },
     { cls: "b", value: active, label: "Active Tenders" },
-    { cls: "a", value: d.bidders.length, label: "Total Bidders" },
-    { cls: "b", value: d.subs.length, label: "Submissions" },
+    { cls: "a", value: bidders.length, label: "Total Bidders" },
+    { cls: "b", value: subs.length, label: "Submissions" },
     { cls: "c", value: pending, label: "Pending Verification" },
     { cls: "d", value: nonComp, label: "Non-Compliant" },
   ];
@@ -48,17 +56,17 @@ export default function DashboardHome({ go }) {
             <div><p className="ad-h">Recent submissions</p><p className="ad-sub">Latest bids awaiting review</p></div>
             <button className="ad-btn ghost" onClick={() => go("submissions")}>View all</button>
           </div>
-          {d.subs.length === 0 ? (
-            <div style={{ padding: 30, color: "#6A7873", fontSize: 14 }}>Koi submission nahi (backend se aayega).</div>
+          {subs.length === 0 ? (
+            <div style={{ padding: 30, color: "#6A7873", fontSize: 14 }}>No submissions yet.</div>
           ) : (
             <table className="ad-table">
               <thead><tr><th>Submission</th><th>Bid Amount</th><th>Status</th></tr></thead>
               <tbody>
-                {d.subs.slice(0, 5).map((s, i) => (
+                {subs.slice(0, 5).map((s, i) => (
                   <tr key={s.id || i} className="ad-row-anim" style={{ animationDelay: `${i * 60}ms` }}
-                    onClick={() => go("compliance", { submissionId: s.id })}>
-                    <td className="t-strong">{s.submission_number || `BID-SUB-${s.id}`}</td>
-                    <td>{s.bid_amount ? `₹${s.bid_amount}` : "—"}</td>
+                    onClick={() => go("submissions")}>
+                    <td className="t-strong">{s.bid_ref || s.submission_number || `BID-${s.id}`}</td>
+                    <td>{s.amount || s.bid_amount || "—"}</td>
                     <td><span className="ad-pill review"><i />{s.status || "Submitted"}</span></td>
                   </tr>
                 ))}
@@ -79,7 +87,6 @@ export default function DashboardHome({ go }) {
             <button key={q.k} className="ad-item" style={{ color: "#14201B", width: "100%", marginBottom: 6 }}
               onClick={() => go(q.k)}>
               <AIcon name={q.i} /><span>{q.t}</span>
-              <AIcon name="chevron" className="" />
             </button>
           ))}
         </div>
