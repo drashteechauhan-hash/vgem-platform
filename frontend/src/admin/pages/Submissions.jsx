@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useShared } from "../../sharedStore";
-import { crossVerify, getAudit } from "../../services/api";
+import { crossVerify, verifyBidder, getAudit } from "../../services/api";
 
 const toneOf = (s) => s === "Approved" ? "ok" : s === "Rejected" ? "warn" : "review";
 
@@ -49,15 +49,23 @@ const AI_STEPS = ["Reading documents", "Extracting entities", "Cross-checking go
 function BidReview({ bid, onClose, onDecide }) {
   const [step, setStep] = useState(0);
   const [cvResult, setCvResult] = useState(null);
+  const [vbResult, setVbResult] = useState(null);
   const [cvLoading, setCvLoading] = useState(false);
   const [audit, setAudit] = useState([]);
   const [decided, setDecided] = useState(bid.status !== "Submitted" ? bid.status : null);
 
   const runCV = async () => {
     setCvLoading(true);
-    const r = await crossVerify({ gstin: bid.gstin || "", company: bid.bidder || "", pan: "" });
+    // Existing cross-verification stays the source of truth for confidence/flags.
+    // /verify/bidder is the source of truth for Phase 2 restriction evidence.
+    // Both are existing backend endpoints — no verification logic is duplicated here.
+    const [cv, vb] = await Promise.all([
+      crossVerify({ gstin: bid.gstin || "", company: bid.bidder || "", pan: "" }),
+      verifyBidder({ gstin: bid.gstin || "", company: bid.bidder || "", pan: "", udyam: "" }),
+    ]);
     setCvLoading(false);
-    if (r.ok) setCvResult(r.data);
+    if (cv.ok) setCvResult(cv.data);
+    if (vb.ok) setVbResult(vb.data);
   };
 
   // AI verification step animation
@@ -82,6 +90,11 @@ function BidReview({ bid, onClose, onDecide }) {
   const level = cvResult ? cvResult.level : "—";
   const ready = step >= AI_STEPS.length;
 
+  // Phase 2 restriction evidence comes straight from the /verify/bidder response.
+  const na = (x) => (x !== undefined && x !== null && String(x).trim() !== "" ? x : "Not available");
+  const restrictionCheck = (vbResult?.checks || []).find((c) => c.portal === "Blacklist / Debarment");
+  const restricted = restrictionCheck?.restriction_found === true;
+
   const decide = (status) => { onDecide(status); setDecided(status); };
 
   return (
@@ -94,7 +107,7 @@ function BidReview({ bid, onClose, onDecide }) {
 
         {/* AI verification steps */}
         <div className="br-sec">
-          <h4>AI Verification</h4>
+          <h4>AI Analysis</h4>
           <ul className="bm-steps">
             {AI_STEPS.map((s, i) => (
               <li key={s} className={i < step ? "done" : i === step ? "run" : "pend"}>
@@ -147,6 +160,37 @@ function BidReview({ bid, onClose, onDecide }) {
                 </>
               )}
             </div>
+
+            {/* Phase 2 restriction evidence — from /verify/bidder */}
+            {vbResult && (
+              <div className="br-sec">
+                <h4>Evidence Summary <span className="br-real">RESTRICTION DB</span></h4>
+                {restricted ? (
+                  <div className="br-ev warn">
+                    <div className="br-ev-top">
+                      <span className="br-ev-type">{na(restrictionCheck.restriction_type)}</span>
+                      <span className="br-ev-flag">Restriction match found — officer review required</span>
+                    </div>
+                    <div className="br-ev-grid">
+                      <div className="br-ev-item"><span>Entity / company</span><b>{na(restrictionCheck.entity_name)}</b></div>
+                      <div className="br-ev-item"><span>Issuing authority</span><b>{na(restrictionCheck.issuing_authority)}</b></div>
+                      <div className="br-ev-item wide"><span>Reason</span><b>{na(restrictionCheck.detail)}</b></div>
+                      <div className="br-ev-item"><span>Order / reference</span><b>{na(restrictionCheck.order_reference)}</b></div>
+                      <div className="br-ev-item"><span>Source</span><b>{na(restrictionCheck.source)}</b></div>
+                      <div className="br-ev-item"><span>Start date</span><b>{na(restrictionCheck.start_date)}</b></div>
+                      <div className="br-ev-item"><span>End date</span><b>{na(restrictionCheck.end_date)}</b></div>
+                      <div className="br-ev-item wide"><span>Source URL</span>
+                        <b>{restrictionCheck.source_url
+                          ? <a href={restrictionCheck.source_url} target="_blank" rel="noreferrer">{restrictionCheck.source_url}</a>
+                          : "Not available"}</b>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="br-ev clear">✓ Clear — No restriction found</div>
+                )}
+              </div>
+            )}
 
             {/* documents */}
             <div className="br-sec">

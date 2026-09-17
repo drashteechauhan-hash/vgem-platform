@@ -1,4 +1,55 @@
+@layer theme, base, components, utilities;
+
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap");
+
+/* ============================================================
+   TAILWIND FOUNDATION — Phase 8B
+   Theme + utilities only. Preflight (base reset) is intentionally
+   NOT imported so the existing hand-authored VGEM CSS and its
+   visual identity are preserved 1:1. Enable later with QA.
+   ============================================================ */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* VGEM design tokens exposed to Tailwind (bg-vg-*, text-vg-*, etc.).
+   Mirror the existing palette — nothing here changes current styling. */
+@theme {
+  --color-vg-ink-950: #071d33;
+  --color-vg-ink-900: #0a2948;
+  --color-vg-ink-800: #123d63;
+  --color-vg-ink-700: #1a537b;
+  --color-vg-blue-600: #1674b9;
+  --color-vg-blue-500: #2189d0;
+  --color-vg-blue-100: #eaf5fd;
+  --color-vg-teal-700: #087c73;
+  --color-vg-teal-600: #079989;
+  --color-vg-teal-100: #e2f7f3;
+  --color-vg-gold-700: #a96f11;
+  --color-vg-gold-600: #c98b1d;
+  --color-vg-gold-100: #fff6df;
+  --color-vg-red-700: #b83b3b;
+  --color-vg-red-100: #fff0f0;
+  --color-vg-emerald: #16a67a;
+  --color-vg-emerald-d: #0e8a63;
+  --color-vg-emerald-l: #eaf7f1;
+  --color-vg-slate-950: #172b3f;
+  --color-vg-slate-800: #334e68;
+  --color-vg-slate-700: #486581;
+  --color-vg-slate-600: #627d98;
+  --color-vg-slate-500: #829ab1;
+  --color-vg-slate-300: #d9e2ec;
+  --color-vg-slate-200: #e7eef4;
+  --color-vg-slate-100: #f3f7fa;
+  --color-vg-paper: #f6f7f5;
+  --color-vg-card: #ffffff;
+
+  --font-vg-sans: "Manrope", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-vg-body: "DM Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  --shadow-vg-sm: 0 4px 14px rgba(14, 45, 73, 0.06);
+  --shadow-vg-md: 0 14px 36px rgba(14, 45, 73, 0.10);
+  --shadow-vg-lg: 0 28px 68px rgba(7, 29, 51, 0.18);
+}
 
 :root {
   --ink-950: #071d33;

@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AIcon } from "../ui";
 import { useShared } from "../../sharedStore";
+import { getTenderRequirements } from "../../services/api";
 
 const STATUS = ["All", "Published", "Draft", "Closed"];
 const cls = (s) => ({ "Published": "ok", "Under Evaluation": "review", "Closing Soon": "warn", "Draft": "neutral", "Closed": "neutral" }[s] || "neutral");
@@ -11,6 +12,7 @@ export default function Tenders({ go }) {
   const [filter, setFilter] = useState("All");
   const [modal, setModal] = useState(false);
   const [toast, setToast] = useState(null);
+  const [reqTender, setReqTender] = useState(null);
 
   const summary = useMemo(() => ({
     Published: tenders.filter((r) => r.status === "Published").length,
@@ -61,7 +63,7 @@ export default function Tenders({ go }) {
 
         <div className="tn-scroll">
           <table className="ad-table tn-table">
-            <thead><tr><th>Tender ID</th><th>Title</th><th>Department</th><th>Category</th><th>Value</th><th>Closing</th><th>Bids</th><th>Status</th></tr></thead>
+            <thead><tr><th>Tender ID</th><th>Title</th><th>Department</th><th>Category</th><th>Value</th><th>Closing</th><th>Bids</th><th>Status</th><th>Requirements</th></tr></thead>
             <tbody>
               {shown.map((r, i) => (
                 <tr key={r.id} className="ad-row-anim" style={{ animationDelay: `${i * 40}ms`, cursor: "pointer" }}
@@ -74,6 +76,7 @@ export default function Tenders({ go }) {
                   <td>{r.closing}</td>
                   <td><b>{bidsForTender(r.id).length}</b></td>
                   <td><span className={"ad-pill " + cls(r.status)}><i />{r.status}</span></td>
+                  <td><button className="ad-btn ghost tn-req-btn" onClick={(e) => { e.stopPropagation(); setReqTender(r); }}>View</button></td>
                 </tr>
               ))}
             </tbody>
@@ -82,6 +85,7 @@ export default function Tenders({ go }) {
       </div>
 
       {modal && <CreateModal onClose={() => setModal(false)} onPublish={publish} />}
+      {reqTender && <RequirementsModal tender={reqTender} onClose={() => setReqTender(null)} />}
       {toast && <div className="bm-toast" style={{ position: "fixed" }}>✓ {toast}</div>}
     </>
   );
@@ -122,6 +126,62 @@ function CreateModal({ onClose, onPublish }) {
           onClick={() => onPublish({ ...t, cat: t.cat, requirements: reqs.map((k) => ({ key: k, mandatory: true })) })}>
           Publish Tender
         </button>
+      </div>
+    </div>
+  );
+}
+// ---- Structured tender requirements (Phase 2) ----
+const REQ_LABELS = {
+  GST: "GST Registration", PAN: "PAN", UDYAM: "Udyam / MSME Registration",
+  ESIC: "ESIC Compliance", BIS: "BIS Certification", EPFO: "EPFO",
+  MAKEININDIA: "Make in India", COMPANYREG: "Company Registration",
+};
+const reqLabel = (t) => REQ_LABELS[(t || "").toUpperCase()] || t || "Requirement";
+
+function RequirementsModal({ tender, onClose }) {
+  const [state, setState] = useState({ loading: true, error: false, rows: [] });
+
+  const load = () => {
+    setState((s) => ({ ...s, loading: true, error: false }));
+    getTenderRequirements(tender.dbId).then((r) => {
+      if (r.ok) setState({ loading: false, error: false, rows: r.data });
+      else setState({ loading: false, error: true, rows: [] });
+    });
+  };
+  useEffect(load, [tender.dbId]);
+
+  return (
+    <div className="bm-overlay" onClick={onClose}>
+      <div className="bm-card" onClick={(e) => e.stopPropagation()} style={{ width: "min(520px,100%)" }}>
+        <button className="bm-x" onClick={onClose}>×</button>
+        <h3 className="bm-title">Compliance Requirements</h3>
+        <span className="bm-status">{tender.id} · {tender.title}</span>
+
+        {state.loading ? (
+          <p className="tn-reqm-msg">Loading requirements…</p>
+        ) : state.error ? (
+          <div className="tn-reqm-msg">
+            Unable to load tender requirements.
+            <button className="ad-btn ghost" style={{ marginLeft: 10 }} onClick={load}>Retry</button>
+          </div>
+        ) : state.rows.length === 0 ? (
+          <p className="tn-reqm-msg">No structured requirements available for this tender.</p>
+        ) : (
+          <div className="tn-reqm-list">
+            {state.rows.map((rq, i) => (
+              <div key={i} className="tn-reqm">
+                <span className="tn-reqm-ic"><AIcon name="check" /></span>
+                <div className="tn-reqm-main">
+                  <strong>{reqLabel(rq.requirement_type)}</strong>
+                  {rq.detail ? <small>{rq.detail}</small> : null}
+                </div>
+                <span className={"tn-mand" + (rq.mandatory ? "" : " opt")}>
+                  {rq.mandatory ? "Mandatory" : "Optional"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -63,3 +63,11 @@ export const getAudit = (bidId) => req(`/audit/${bidId}`);
 export const crossVerify = (body) => req("/ai/cross-verify", { method: "POST", body: JSON.stringify(body) });
 
 export const verifyBidder = (body) => req("/verify/bidder", { method: "POST", body: JSON.stringify(body) });
+
+// ---- RESTRICTIONS / COMPLIANCE INTELLIGENCE (Phase 2) ----
+// q is an optional query string, e.g. "?type=BLACKLISTED&status=active"
+export const getRestrictions = (q = "") => req("/restrictions" + q);
+export const searchRestrictions = (query) => req(`/restrictions/search?query=${encodeURIComponent(query)}`);
+export const lookupRestriction = (identifier) => req(`/restrictions/lookup/${encodeURIComponent(identifier)}`);
+export const getDataSources = () => req("/data-sources");
+export const getTenderRequirements = (tenderId) => req(`/tenders/${tenderId}/requirements`);

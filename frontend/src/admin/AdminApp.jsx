@@ -21,6 +21,7 @@ export default function AdminApp({ user, onLogout }) {
   const [page, setPage] = useState("dashboard");
   const [ctx, setCtx] = useState({});
   const [hovered, setHovered] = useState(false);
+  const [drawer, setDrawer] = useState(false);
   const status = useBackendStatus();
   const navRef = useRef(null);
   const [ind, setInd] = useState({ top: 0, height: 0 });
@@ -30,19 +31,30 @@ export default function AdminApp({ user, onLogout }) {
     if (el) setInd({ top: el.offsetTop, height: el.offsetHeight });
   }, [page, hovered]);
 
+  // lock body scroll while the mobile drawer is open
+  useEffect(() => {
+    document.body.style.overflow = drawer ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [drawer]);
+
   const current = PAGES.find((p) => p.key === page);
   const Current = current.C;
-  const go = (k, data = {}) => { setPage(k); setCtx(data); };
+  const go = (k, data = {}) => { setPage(k); setCtx(data); setDrawer(false); };
   const org = (user && user.org) || "Government e-Marketplace";
 
   return (
-    <div className={"admin" + (hovered ? " expanded" : "")}>
+    <div className={"admin" + (hovered ? " expanded" : "") + (drawer ? " drawer-open" : "")}>
+      <button className="ad-scrim" aria-label="Close menu" onClick={() => setDrawer(false)} />
+
       <aside className="ad-side"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}>
         <div className="ad-brand">
 <span className="ad-mark"><VGEMLogo size={18} color="#fff" /></span>
           <div className="ad-brand-txt"><strong>VGEM</strong><small>Officer Console</small></div>
+          <button className="ad-drawer-close" aria-label="Close menu" onClick={() => setDrawer(false)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
         </div>
 
         <nav className="ad-nav" ref={navRef}>
@@ -69,21 +81,19 @@ export default function AdminApp({ user, onLogout }) {
 
       <main className="ad-main">
         <header className="ad-top">
-          <div>
-            <p className="ad-crumb">Officer Console</p>
-            <h1>{current.label}</h1>
+          <div className="ad-top-left">
+            <button className="ad-burger" aria-label="Open menu" onClick={() => setDrawer(true)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            <div>
+              <p className="ad-crumb">Officer Console</p>
+              <h1>{current.label}</h1>
+            </div>
           </div>
           <div className="ad-top-right">
-            <span className={"ad-status " + status}>
-              <i /> {status === "online" ? "Backend connected" : status === "offline" ? "Backend offline" : "Connecting…"}
-            </span>
             <span className="ad-top-avatar">OF</span>
           </div>
         </header>
-
-                {status === "offline" && (
-          <div className="ad-banner">Backend not connected — showing sample data.</div>
-        )}
 
         <section className="ad-page" key={page}>
           <Current go={go} ctx={ctx} status={status} />

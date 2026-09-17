@@ -230,17 +230,7 @@
 .pf-field.full{ grid-column:1 / -1; }
 
 @media (max-width:1000px){
-  .bidder{ grid-template-columns:1fr; }
-  .side{ position:relative; height:auto; flex-direction:row; align-items:center; padding:12px 16px; overflow-x:auto; }
-  .side-nav{ flex-direction:row; margin:0 0 0 10px; flex:1; }
-  .side-ind{ display:none; }
-  .side-item.on{ background:rgba(18,185,129,.9); }
-  .side-foot{ margin:0; padding:0; border:none; }
-  .side-user, .side-logout span{ display:none; }
-  .side-logout{ width:auto; border:none; padding:10px; }
   .ov-top, .stat-grid, .doc-grid, .bid-grid, .pf-grid{ grid-template-columns:1fr; }
-  .search input{ width:150px; }
-  .topbar, .page{ padding-left:20px; padding-right:20px; }
 }
 
 /* ---- collapsible sidebar ---- */
@@ -742,3 +732,77 @@
 .cv-flags-title{ font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-bottom:10px; }
 .cv-flag-item{ padding:10px 14px; border-radius:10px; font-size:13px; font-weight:600; margin-bottom:7px; }
 .cv-flag-item.high{ background:#FBE8E5; color:#C0402E; } .cv-flag-item.medium{ background:#FBF1DC; color:#C9911F; } .cv-flag-item.low{ background:#EEF0ED; color:var(--muted); }
+.cv-noflags{ padding:10px 14px; border-radius:10px; font-size:13px; font-weight:600; background:var(--emerald-l); color:var(--emerald-d); }
+
+/* Phase 2 — AI Verification Insights (bidder); reuses existing tokens */
+.cv-ai{ margin:4px 0 20px; padding:16px 18px; border:1px solid var(--line); border-radius:14px; background:var(--paper); }
+.cv-ai-badge{ display:inline-block; font-size:10px; font-weight:800; letter-spacing:.5px; color:var(--emerald-d); background:var(--emerald-l); padding:3px 9px; border-radius:6px; }
+.cv-ai-list{ list-style:none; margin:12px 0 10px; padding:0; display:flex; flex-direction:column; gap:7px; }
+.cv-ai-list li{ position:relative; padding-left:18px; font-size:13px; color:var(--text); }
+.cv-ai-list li::before{ content:"•"; position:absolute; left:4px; color:var(--emerald-d); font-weight:800; }
+.cv-ai-foot{ font-size:11.5px; color:var(--muted); margin:0; }
+
+/* Phase 2 — Restriction Evidence (bidder) */
+.cv-ev-sec{ margin-top:18px; padding-top:16px; border-top:1px solid var(--line); }
+.cv-ev-title{ font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-bottom:10px; }
+.cv-ev-clear{ padding:12px 14px; border-radius:12px; background:var(--emerald-l); color:var(--emerald-d); font-weight:700; font-size:13.5px; }
+.cv-ev{ border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+.cv-ev.warn{ background:var(--red-l); border-color:rgba(192,64,46,.18); }
+.cv-ev-top{ display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+.cv-ev-type{ font-weight:800; font-size:11px; letter-spacing:.4px; text-transform:uppercase; color:#fff; background:var(--red); padding:4px 10px; border-radius:6px; }
+.cv-ev-flag{ font-size:12.5px; font-weight:700; color:var(--red); }
+.cv-ev-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 18px; }
+.cv-ev-item{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.cv-ev-item.wide{ grid-column:1 / -1; }
+.cv-ev-item span{ font-size:10.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); }
+.cv-ev-item b{ font-size:13px; color:var(--text); font-weight:700; word-break:break-word; }
+.cv-ev-item a{ color:var(--emerald-d); text-decoration:none; }
+.cv-ev-item a:hover{ text-decoration:underline; }
+
+/* Phase 2 — error state (bidder compliance) */
+.cv-err{ font-size:14px; color:var(--red); font-weight:600; display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0; }
+.cv-retry{ padding:7px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--text); font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; }
+.cv-retry:hover{ border-color:var(--emerald); color:var(--emerald-d); }
+
+@media (max-width:560px){ .cv-ev-grid{ grid-template-columns:1fr; } }
+
+/* ============================================
+   PHASE 8B — RESPONSIVE BIDDER SHELL (mobile drawer)
+   ============================================ */
+.bm-top-left{ display:flex; align-items:center; gap:12px; min-width:0; }
+.bm-burger, .bm-drawer-close, .bm-scrim{ display:none; }
+.bm-burger{ width:42px; height:42px; border-radius:11px; border:1px solid var(--line);
+  background:#fff; color:var(--text); place-items:center; flex-shrink:0; }
+.bm-burger svg{ width:22px; height:22px; }
+.bm-burger:hover{ border-color:var(--emerald); color:var(--emerald-d); }
+.bm-drawer-close{ margin-left:auto; width:34px; height:34px; border-radius:9px; border:none;
+  background:transparent; color:rgba(255,255,255,.7); place-items:center; }
+.bm-drawer-close svg{ width:20px; height:20px; }
+
+@media (max-width:900px){
+  .bidder, .bidder.expanded{ grid-template-columns:1fr !important; }
+  .side{
+    position:fixed !important; left:0; top:0; height:100vh; width:min(84vw,300px);
+    transform:translateX(-100%); transition:transform .3s cubic-bezier(.3,.8,.3,1);
+    z-index:60; overflow-y:auto; overflow-x:hidden; padding:20px 16px;
+    box-shadow:0 24px 60px rgba(11,26,21,.35);
+  }
+  .bidder.drawer-open .side{ transform:none; }
+  .side-top{ display:flex; align-items:center; justify-content:space-between; }
+  .side-brand-txt, .side-label, .side-user-txt{ opacity:1 !important; width:auto !important; }
+  .side-item, .side-user, .side-logout, .side-brand{ justify-content:flex-start !important; }
+  .side-item::after{ display:none !important; }
+  .bm-drawer-close{ display:grid; }
+  .bm-burger{ display:grid; }
+  .bm-scrim{ display:block; position:fixed; inset:0; z-index:55; border:none; padding:0;
+    background:rgba(9,20,15,.44); opacity:0; pointer-events:none; transition:opacity .3s; }
+  .bidder.drawer-open .bm-scrim{ opacity:1; pointer-events:auto; }
+  .topbar{ padding:14px 18px; }
+  .topbar h1{ font-size:20px; }
+  .page{ padding:20px 18px 44px; }
+}
+
+@media (max-width:640px){
+  .search{ display:none; }
+  .topbar h1{ font-size:18px; }
+}

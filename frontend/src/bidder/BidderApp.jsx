@@ -32,6 +32,7 @@ export default function BidderApp({ user, onLogout }) {
   const [page, setPage] = useState("overview");
   const [hovered, setHovered] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [drawer, setDrawer] = useState(false);
   const navRef = useRef(null);
   const menuRef = useRef(null);
   const [ind, setInd] = useState({ top: 0, height: 0 });
@@ -47,13 +48,21 @@ export default function BidderApp({ user, onLogout }) {
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
+  // lock body scroll while the mobile drawer is open
+  useEffect(() => {
+    document.body.style.overflow = drawer ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [drawer]);
+
   const current = PAGES.find((p) => p.key === page);
   const Current = current.C;
-  const go = (k) => setPage(k);
+  const go = (k) => { setPage(k); setDrawer(false); };
 
   return (
     <StoreProvider profile={profile}>
-      <div className={"bidder" + (hovered ? " expanded" : "")}>
+      <div className={"bidder" + (hovered ? " expanded" : "") + (drawer ? " drawer-open" : "")}>
+        <button className="bm-scrim" aria-label="Close menu" onClick={() => setDrawer(false)} />
+
         <aside className="side"
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}>
@@ -62,6 +71,9 @@ export default function BidderApp({ user, onLogout }) {
 <span className="side-mark"><VGEMLogo size={18} color="#fff" /></span>
 <div className="side-brand-txt"><strong>VGEM</strong><small>Bidder Portal</small></div>
             </div>
+            <button className="bm-drawer-close" aria-label="Close menu" onClick={() => setDrawer(false)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
           </div>
 
           <nav className="side-nav" ref={navRef}>
@@ -92,9 +104,14 @@ export default function BidderApp({ user, onLogout }) {
 
         <main className="main">
           <header className="topbar">
-            <div>
-              <p className="crumb">Bidder Portal</p>
-              <h1>{current.label}</h1>
+            <div className="bm-top-left">
+              <button className="bm-burger" aria-label="Open menu" onClick={() => setDrawer(true)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+              </button>
+              <div>
+                <p className="crumb">Bidder Portal</p>
+                <h1>{current.label}</h1>
+              </div>
             </div>
             <div className="topbar-right">
               <div className="search">
